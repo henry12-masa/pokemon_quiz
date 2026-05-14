@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ポケモンクイズ500問</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#fff7cc,#e8f4ff);color:#333;text-align:center}
+header{background:#ef5350;color:white;padding:25px 10px}
+.container{max-width:760px;margin:30px auto;background:white;padding:25px;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,.15)}
+.ad{max-width:760px;margin:20px auto;padding:10px;background:#fff;border-radius:12px}
+.question{font-size:22px;font-weight:bold;margin-bottom:25px;line-height:1.5}
+.choices button{display:block;width:100%;margin:12px 0;padding:15px;font-size:17px;border:none;border-radius:12px;background:#fff2bf;cursor:pointer}
+.choices button:hover{background:#ffe082}
+.correct{background:#9be7a1!important}
+.wrong{background:#ff9b9b!important}
+#result{font-size:20px;font-weight:bold;margin-top:20px;min-height:30px}
+.score{margin-top:15px;font-size:16px}
+.restart{margin-top:25px;padding:14px 25px;font-size:17px;border:none;border-radius:30px;background:#ef5350;color:white;cursor:pointer;display:none}
+</style>
+</head>
+<body>
+
+<header>
+<h1>ポケモンクイズ</h1>
+<p>タイプ・進化・地方・御三家・伝説ポケモンの500問クイズ</p>
+</header>
+
+<div class="ad">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8398161859137802" crossorigin="anonymous"></script>
+<!-- チェス -->
+<ins class="adsbygoogle"
+style="display:block"
+data-ad-client="ca-pub-8398161859137802"
+data-ad-slot="5599163841"
+data-ad-format="auto"
+data-full-width-responsive="true"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+
+<div class="container">
+<div class="score" id="progress"></div>
+<div class="question" id="question"></div>
+<div class="choices" id="choices"></div>
+<div id="result"></div>
+<button class="restart" id="restartBtn" onclick="restartQuiz()">もう一度遊ぶ</button>
+</div>
+
+<script>
+const QUESTION_COUNT = 50;
+const TOTAL_COUNT = 500;
+
+const typeFacts = [
+{t:"ノーマル",strong:"なし",weak:"かくとう",no:"ゴースト"},
+{t:"ほのお",strong:"くさ",weak:"みず",no:"なし"},
+{t:"みず",strong:"ほのお",weak:"でんき",no:"なし"},
+{t:"くさ",strong:"みず",weak:"ほのお",no:"なし"},
+{t:"でんき",strong:"みず",weak:"じめん",no:"じめん"},
+{t:"こおり",strong:"ドラゴン",weak:"ほのお",no:"なし"},
+{t:"かくとう",strong:"ノーマル",weak:"ひこう",no:"ゴースト"},
+{t:"どく",strong:"フェアリー",weak:"じめん",no:"はがね"},
+{t:"じめん",strong:"でんき",weak:"みず",no:"ひこう"},
+{t:"ひこう",strong:"くさ",weak:"でんき",no:"なし"},
+{t:"エスパー",strong:"かくとう",weak:"むし",no:"あく"},
+{t:"むし",strong:"くさ",weak:"ほのお",no:"なし"},
+{t:"いわ",strong:"ひこう",weak:"みず",no:"なし"},
+{t:"ゴースト",strong:"エスパー",weak:"ゴースト",no:"ノーマル"},
+{t:"ドラゴン",strong:"ドラゴン",weak:"こおり",no:"フェアリー"},
+{t:"あく",strong:"エスパー",weak:"かくとう",no:"なし"},
+{t:"はがね",strong:"フェアリー",weak:"ほのお",no:"なし"},
+{t:"フェアリー",strong:"ドラゴン",weak:"どく",no:"なし"}
+];
+
+const starters = [
+{region:"カントー",grass:"フシギダネ",fire:"ヒトカゲ",water:"ゼニガメ"},
+{region:"ジョウト",grass:"チコリータ",fire:"ヒノアラシ",water:"ワニノコ"},
+{region:"ホウエン",grass:"キモリ",fire:"アチャモ",water:"ミズゴロウ"},
+{region:"シンオウ",grass:"ナエトル",fire:"ヒコザル",water:"ポッチャマ"},
+{region:"イッシュ",grass:"ツタージャ",fire:"ポカブ",water:"ミジュマル"},
+{region:"カロス",grass:"ハリマロン",fire:"フォッコ",water:"ケロマツ"},
+{region:"アローラ",grass:"モクロー",fire:"ニャビー",water:"アシマリ"},
+{region:"ガラル",grass:"サルノリ",fire:"ヒバニー",water:"メッソン"},
+{region:"パルデア",grass:"ニャオハ",fire:"ホゲータ",water:"クワッス"}
+];
+
+const regions = [
+["カントー","マサラタウン","オーキド博士"],
+["ジョウト","ワカバタウン","ウツギ博士"],
+["ホウエン","ミシロタウン","オダマキ博士"],
+["シンオウ","フタバタウン","ナナカマド博士"],
+["イッシュ","カノコタウン","アララギ博士"],
+["カロス","アサメタウン","プラターヌ博士"],
+["アローラ","リリィタウン","ククイ博士"],
+["ガラル","ハロンタウン","マグノリア博士"],
+["パルデア","コサジタウン","クラベル校長"]
+];
+
+const evolutions = [
+["フシギダネ","フシギソウ"],["フシギソウ","フシギバナ"],["ヒトカゲ","リザード"],["リザード","リザードン"],
+["ゼニガメ","カメール"],["カメール","カメックス"],["キャタピー","トランセル"],["トランセル","バタフリー"],
+["ビードル","コクーン"],["コクーン","スピアー"],["ポッポ","ピジョン"],["ピジョン","ピジョット"],
+["コラッタ","ラッタ"],["オニスズメ","オニドリル"],["アーボ","アーボック"],["ピチュー","ピカチュウ"],
+["ピカチュウ","ライチュウ"],["サンド","サンドパン"],["ニドラン♀","ニドリーナ"],["ニドリーナ","ニドクイン"],
+["ニドラン♂","ニドリーノ"],["ニドリーノ","ニドキング"],["ピッピ","ピクシー"],["ロコン","キュウコン"],
+["プリン","プクリン"],["ズバット","ゴルバット"],["ナゾノクサ","クサイハナ"],["クサイハナ","ラフレシア"],
+["パラス","パラセクト"],["コンパン","モルフォン"],["ディグダ","ダグトリオ"],["ニャース","ペルシアン"],
+["コダック","ゴルダック"],["マンキー","オコリザル"],["ガーディ","ウインディ"],["ニョロモ","ニョロゾ"],
+["ニョロゾ","ニョロボン"],["ケーシィ","ユンゲラー"],["ユンゲラー","フーディン"],["ワンリキー","ゴーリキー"],
+["ゴーリキー","カイリキー"],["マダツボミ","ウツドン"],["ウツドン","ウツボット"],["メノクラゲ","ドククラゲ"],
+["イシツブテ","ゴローン"],["ゴローン","ゴローニャ"],["ポニータ","ギャロップ"],["ヤドン","ヤドラン"],
+["コイル","レアコイル"],["ドードー","ドードリオ"],["パウワウ","ジュゴン"],["ベトベター","ベトベトン"],
+["シェルダー","パルシェン"],["ゴース","ゴースト"],["ゴースト","ゲンガー"],["スリープ","スリーパー"],
+["クラブ","キングラー"],["ビリリダマ","マルマイン"],["タマタマ","ナッシー"],["カラカラ","ガラガラ"],
+["ドガース","マタドガス"],["サイホーン","サイドン"],["タッツー","シードラ"],["トサキント","アズマオウ"],
+["ヒトデマン","スターミー"],["コイキング","ギャラドス"],["イーブイ","シャワーズ"],["イーブイ","サンダース"],
+["イーブイ","ブースター"],["オムナイト","オムスター"],["カブト","カブトプス"],["ミニリュウ","ハクリュー"],
+["ハクリュー","カイリュー"],["チコリータ","ベイリーフ"],["ベイリーフ","メガニウム"],["ヒノアラシ","マグマラシ"],
+["マグマラシ","バクフーン"],["ワニノコ","アリゲイツ"],["アリゲイツ","オーダイル"],["メリープ","モココ"],
+["モココ","デンリュウ"],["ハネッコ","ポポッコ"],["ポポッコ","ワタッコ"],["ウパー","ヌオー"],
+["ヤミカラス","ドンカラス"],["ニューラ","マニューラ"],["ムウマ","ムウマージ"],["グライガー","グライオン"],
+["キモリ","ジュプトル"],["ジュプトル","ジュカイン"],["アチャモ","ワカシャモ"],["ワカシャモ","バシャーモ"],
+["ミズゴロウ","ヌマクロー"],["ヌマクロー","ラグラージ"],["ラルトス","キルリア"],["キルリア","サーナイト"],
+["ナエトル","ハヤシガメ"],["ハヤシガメ","ドダイトス"],["ヒコザル","モウカザル"],["モウカザル","ゴウカザル"],
+["ポッチャマ","ポッタイシ"],["ポッタイシ","エンペルト"]
+];
+
+const legendary = [
+["ミュウツー","カントー"],["ミュウ","カントー"],["ルギア","ジョウト"],["ホウオウ","ジョウト"],
+["カイオーガ","ホウエン"],["グラードン","ホウエン"],["レックウザ","ホウエン"],["ジラーチ","ホウエン"],
+["ディアルガ","シンオウ"],["パルキア","シンオウ"],["ギラティナ","シンオウ"],["アルセウス","シンオウ"],
+["レシラム","イッシュ"],["ゼクロム","イッシュ"],["キュレム","イッシュ"],["ビクティニ","イッシュ"],
+["ゼルネアス","カロス"],["イベルタル","カロス"],["ジガルデ","カロス"],["ディアンシー","カロス"],
+["ソルガレオ","アローラ"],["ルナアーラ","アローラ"],["ネクロズマ","アローラ"],["マギアナ","アローラ"],
+["ザシアン","ガラル"],["ザマゼンタ","ガラル"],["ムゲンダイナ","ガラル"],["バドレックス","ガラル"],
+["コライドン","パルデア"],["ミライドン","パルデア"],["チオンジェン","パルデア"],["パオジアン","パルデア"]
+];
+
+const pokemonTypes = [
+["ピカチュウ","でんき"],["リザードン","ほのお"],["カメックス","みず"],["フシギバナ","くさ"],
+["ゲンガー","ゴースト"],["カイリュー","ドラゴン"],["ギャラドス","みず"],["ラプラス","みず"],
+["カビゴン","ノーマル"],["ルカリオ","かくとう"],["ガブリアス","ドラゴン"],["サーナイト","エスパー"],
+["ブラッキー","あく"],["ニンフィア","フェアリー"],["ハッサム","むし"],["メタグロス","はがね"],
+["バンギラス","いわ"],["ゲッコウガ","みず"],["ジュカイン","くさ"],["バシャーモ","ほのお"],
+["ラグラージ","みず"],["エンペルト","みず"],["ゴウカザル","ほのお"],["ドダイトス","くさ"],
+["ミミッキュ","ゴースト"],["ドラパルト","ドラゴン"],["エースバーン","ほのお"],["ゴリランダー","くさ"],
+["インテレオン","みず"],["マスカーニャ","くさ"],["ラウドボーン","ほのお"],["ウェーニバル","みず"]
+];
+
+function shuffleArray(array){
+  const copied = [...array];
+  for(let i = copied.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copied[i], copied[j]] = [copied[j], copied[i]];
+  }
+  return copied;
+}
+
+function makeChoices(correct, pool){
+  const wrongs = shuffleArray(pool.filter(x => x !== correct)).slice(0,3);
+  return shuffleArray([correct,...wrongs]);
+}
+
+function buildQuestionBank(){
+  const questions = [];
+  const seen = new Set();
+
+  function add(q,c,a){
+    if(seen.has(q)) return;
+    seen.add(q);
+    questions.push({q,c,a});
+  }
+
+  const typeNames = typeFacts.map(x=>x.t);
+  const regionsOnly = regions.map(x=>x[0]);
+  const towns = regions.map(x=>x[1]);
+  const professors = regions.map(x=>x[2]);
+  const pokemonNames = [...new Set([
+    ...evolutions.flat(),
+    ...legendary.map(x=>x[0]),
+    ...pokemonTypes.map(x=>x[0]),
+    ...starters.flatMap(x=>[x.grass,x.fire,x.water])
+  ])];
+
+  typeFacts.forEach(x=>{
+    add(`${x.t}タイプが弱点になりやすいタイプは？`, makeChoices(x.weak,typeNames), x.weak);
+    add(`${x.t}タイプの技が効果ばつぐんになりやすい相手は？`, makeChoices(x.strong,typeNames), x.strong);
+    add(`${x.t}タイプの技が効かない、または無効になりやすい相手は？`, makeChoices(x.no,typeNames.concat(["なし"])), x.no);
+    add(`${x.weak}タイプの技を受けると弱点を突かれやすいのは？`, makeChoices(x.t,typeNames), x.t);
+    add(`${x.strong}タイプに強く出やすい攻撃タイプは？`, makeChoices(x.t,typeNames), x.t);
+  });
+
+  starters.forEach(s=>{
+    add(`${s.region}地方のくさタイプ御三家は？`, makeChoices(s.grass,pokemonNames), s.grass);
+    add(`${s.region}地方のほのおタイプ御三家は？`, makeChoices(s.fire,pokemonNames), s.fire);
+    add(`${s.region}地方のみずタイプ御三家は？`, makeChoices(s.water,pokemonNames), s.water);
+    add(`${s.grass}・${s.fire}・${s.water}が最初のパートナーとして登場する地方は？`, makeChoices(s.region,regionsOnly), s.region);
+    add(`${s.grass}のタイプは？`, makeChoices("くさ",typeNames), "くさ");
+    add(`${s.fire}のタイプは？`, makeChoices("ほのお",typeNames), "ほのお");
+    add(`${s.water}のタイプは？`, makeChoices("みず",typeNames), "みず");
+  });
+
+  regions.forEach(r=>{
+    add(`${r[0]}地方で冒険が始まる代表的な町は？`, makeChoices(r[1],towns), r[1]);
+    add(`${r[0]}地方に関係が深い博士・人物は？`, makeChoices(r[2],professors), r[2]);
+    add(`${r[1]}はどの地方の町？`, makeChoices(r[0],regionsOnly), r[0]);
+    add(`${r[2]}と関係が深い地方は？`, makeChoices(r[0],regionsOnly), r[0]);
+  });
+
+  evolutions.forEach(e=>{
+    add(`${e[0]}が進化すると？`, makeChoices(e[1],pokemonNames), e[1]);
+    add(`${e[1]}の進化前は？`, makeChoices(e[0],pokemonNames), e[0]);
+  });
+
+  legendary.forEach(l=>{
+    add(`${l[0]}と関係が深い地方は？`, makeChoices(l[1],regionsOnly), l[1]);
+    add(`${l[1]}地方に関係が深い伝説・幻のポケモンは？`, makeChoices(l[0],legendary.map(x=>x[0])), l[0]);
+  });
+
+  pokemonTypes.forEach(p=>{
+    add(`${p[0]}の代表的なタイプは？`, makeChoices(p[1],typeNames), p[1]);
+    add(`${p[1]}タイプのポケモンはどれ？`, makeChoices(p[0],pokemonTypes.map(x=>x[0])), p[0]);
+  });
+
+  const extra = [
+    ["モンスターボールは何をする道具？","ポケモンを捕まえる","体力を回復する","技を忘れさせる","進化を止める"],
+    ["ポケモンセンターで主にできることは？","ポケモンを回復する","バッジを買う","タイプを変更する","図鑑番号を変える"],
+    ["ジムリーダーに勝つともらえることが多いものは？","バッジ","モンスターボールの空箱","化石だけ","自転車の鍵だけ"],
+    ["ポケモン図鑑の主な役割は？","ポケモンの情報を記録する","お金を増やす","天気を変える","技を無限にする"],
+    ["色違いポケモンとは？","通常と色が違う珍しい個体","必ず伝説の個体","進化できない個体","道具の名前"],
+    ["タマゴから生まれるものは？","ポケモン","ジムバッジ","わざマシン","きのみの木"],
+    ["わざマシンの主な用途は？","技を覚えさせる","ポケモンを捕まえる","町へ移動する","名前を変える"],
+    ["きのみの用途として近いものは？","回復や状態異常対策","ジムを作る","地方を変える","図鑑を消す"],
+    ["ポケモンバトルでHPが0になる状態は？","ひんし","進化","捕獲","交換"],
+    ["通信交換でできることは？","他の人とポケモンを交換する","必ず色違いにする","全員を進化させる","タイプを消す"]
+  ];
+
+  for(let i=0;i<extra.length;i++){
+    const e = extra[i];
+    add(e[0], shuffleArray([e[1],e[2],e[3],e[4]]), e[1]);
+  }
+
+  let n = 1;
+  while(questions.length < TOTAL_COUNT){
+    const t = typeFacts[n % typeFacts.length];
+    const s = starters[n % starters.length];
+    const e = evolutions[n % evolutions.length];
+    const p = pokemonTypes[n % pokemonTypes.length];
+
+    add(`総合問題${n}：${s.region}地方の御三家のうち、ほのおタイプは？`, makeChoices(s.fire,pokemonNames), s.fire);
+    add(`総合問題${n}：${e[0]}の次の進化先として正しいものは？`, makeChoices(e[1],pokemonNames), e[1]);
+    add(`総合問題${n}：${p[0]}の代表的なタイプは？`, makeChoices(p[1],typeNames), p[1]);
+    add(`総合問題${n}：${t.t}タイプが苦手としやすいタイプは？`, makeChoices(t.weak,typeNames), t.weak);
+    n++;
+  }
+
+  return questions.slice(0,TOTAL_COUNT);
+}
+
+const allQuestions = buildQuestionBank();
+
+let quizData = [];
+let currentQuestion = 0;
+let score = 0;
+let answered = false;
+
+const questionEl = document.getElementById("question");
+const choicesEl = document.getElementById("choices");
+const resultEl = document.getElementById("result");
+const progressEl = document.getElementById("progress");
+const restartBtn = document.getElementById("restartBtn");
+
+function startQuiz(){
+  quizData = shuffleArray(allQuestions).slice(0, QUESTION_COUNT);
+  currentQuestion = 0;
+  score = 0;
+  restartBtn.style.display = "none";
+  loadQuestion();
+}
+
+function loadQuestion(){
+  answered = false;
+  resultEl.textContent = "";
+  const q = quizData[currentQuestion];
+
+  progressEl.textContent = `${currentQuestion + 1} / ${quizData.length}問目　正解数：${score}　総問題数：${allQuestions.length}`;
+  questionEl.textContent = q.q;
+  choicesEl.innerHTML = "";
+
+  q.c.forEach(choice=>{
+    const btn = document.createElement("button");
+    btn.textContent = choice;
+    btn.onclick = () => checkAnswer(btn,choice);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function checkAnswer(button, choice){
+  if(answered) return;
+  answered = true;
+
+  const correctAnswer = quizData[currentQuestion].a;
+  const buttons = choicesEl.querySelectorAll("button");
+
+  buttons.forEach(btn=>{
+    btn.disabled = true;
+    if(btn.textContent === correctAnswer){
+      btn.classList.add("correct");
+    }
+  });
+
+  if(choice === correctAnswer){
+    score++;
+    resultEl.textContent = "正解！";
+    button.classList.add("correct");
+  }else{
+    resultEl.textContent = `不正解… 正解は「${correctAnswer}」`;
+    button.classList.add("wrong");
+  }
+
+  setTimeout(()=>{
+    currentQuestion++;
+    if(currentQuestion < quizData.length){
+      loadQuestion();
+    }else{
+      showFinalResult();
+    }
+  },1200);
+}
+
+function showFinalResult(){
+  questionEl.textContent = "クイズ終了！";
+  choicesEl.innerHTML = "";
+  resultEl.innerHTML = `あなたの正解数は <strong>${score} / ${quizData.length}</strong> 問です。`;
+  progressEl.textContent = "";
+  restartBtn.style.display = "inline-block";
+}
+
+function restartQuiz(){
+  startQuiz();
+}
+
+startQuiz();
+</script>
+
+</body>
+</html>
